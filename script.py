@@ -35,15 +35,16 @@ print "Opened File \n"
 #Display top 5 rows to check if everything looks good
 
 # print "DF "+ str(df1)
+allpeople = {}
 teamShifts = {}
 daysOfWeek = [None] * 7
 totalshifts = {}
 listofTeams = {}
 firstTeam = list(df1)[0]
+iterator = 0
 print "First Team "+ str(firstTeam)
 current_team = str(firstTeam)
 df1.append(pd.Series([Nan], index=["Unnamed: 2"]), ignore_index=True)
-print "DF1 is" + str(df1)
 for i,row in df1.iterrows():
 
     try:
@@ -68,7 +69,7 @@ for i,row in df1.iterrows():
                     teamShifts[0] = firstTeam
             
                 # print "Time Found " + date + "\n" 
-                print "Current Team" + current_team
+                # print "Current Team" + current_team
                 for number,day in enumerate(row):
                     
                     if number == 0:
@@ -82,24 +83,65 @@ for i,row in df1.iterrows():
                 if pd.isnull(row[0]):
                     print "Adding into totalshift: "+ current_team + ": "+ str(teamShifts)
                     
-                    print " \nTotal Shifts up to team:" + str(totalshifts)
-                    print " \n Breaking! \n"
+                    # print " \nTotal Shifts up to team:" + str(totalshifts)
+                    # print " \n Breaking! \n"
                     temp = {}
                     teamShifts = {}
                     continue
-                print "Day " + str(row[0]) +": "+ str(current_team)
+                # print "Day " + str(row[0]) +": "+ str(current_team)
+                userbelongsto = ""
+                group = {}
                 for num,day in enumerate(row):
                     if not day == "Off" and not day == row[0]: 
                         # print "Num -1:"+ str(daysOfWeek[num-1]) + " Index: "+str(num)
                         # print "Days of Week " + str(daysOfWeek[0])
+                       
+                        allpeople[row[0]+ "" + str(iterator)] = group
+                        # print "EveryGroup: " + str(everygroup[row[0]])
                         temp[daysOfWeek[num-1]] = day
                         teamShifts[row[0]] = temp
-                totalshifts[current_team + "Eyal"] = teamShifts
+                        iterator +=1
+                        # userbelongsto = "[" +userbelongsto + " & " + day + "]"
+                        team = str(current_team).replace(" ", "")
+                        teamNew = team.replace('"', '')
+                        print "Team is: " +teamNew
+                        today = str(daysOfWeek[num-1]).replace(" ", "")
+                        time = str(day).replace(" ", "")
+                        userbelongsto = userbelongsto + "&Groups[]=" + teamNew +"|"+ today + "|" + time + "|"
+                        # group[num] = str(current_team) + " | " +str(daysOfWeek[num-1]) + "|" + str(day) +" | " +str(userbelongsto)
+                # callAPIforUser()
+                # allpeople[row[0]] = userbelongsto
+                print "User is " + row[0] + " Group is: " + str(userbelongsto)
+                totalshifts[current_team] = teamShifts
                 # daysOfWeek[0] = ""
                 # teamShifts[row[0]] = daysOfWeek[0]
                 # print "Current Team" + current_team
                 # print row[0],row["Unnamed: 1"],row["Unnamed: 2"], row["Unnamed: 3"]
                 #For each shift block   
-print "\nTeamShifts: " + str(totalshifts)
-df1.head(8)
+# print "All Group: " + str(everygroup)
+# print "\nTeamShifts: " + str(totalshifts)
+
+
+def myprint(d):
+  for k, v in d.iteritems():
+    if isinstance(v, dict):
+      myprint(v)
+    else:
+      print "Key: " + k + "{0} : {1}".format(k, v)
+
+def print_dict(v, prefix=''):
+    if isinstance(v, dict):
+        for k, v2 in v.items():
+            p2 = "{}['{}']".format(prefix, k)
+            print_dict(v2, p2)
+    elif isinstance(v, list):
+        for i, v2 in enumerate(v):
+            p2 = "{}[{}]".format(prefix, i)
+            print_dict(v2, p2)
+    else:
+        print('{} = {}'.format(prefix, repr(v)))
+
+# print_dict(totalshifts)
+
+
 df1.to_excel(file_name_schedule) #Write DateFrame back as Excel file
