@@ -5,6 +5,14 @@ import os.path
 import numpy as np
 import datetime
 from numpy import nan as Nan
+import requests
+import random
+from base64 import b64encode
+
+API_ENDPOINT = "https://api.slicktext.com/v1/contacts/"
+
+userAndPass = b64encode(b"****").decode("ascii")
+headers = { 'Authorization' : 'Basic %s' %  userAndPass }
 
 print "\nStarting \n"
 lst = glob.glob("./schedule*")
@@ -42,6 +50,8 @@ totalshifts = {}
 listofTeams = {}
 firstTeam = list(df1)[0]
 iterator = 0
+allEmployees = {}
+
 print "First Team "+ str(firstTeam)
 current_team = str(firstTeam)
 df1.append(pd.Series([Nan], index=["Unnamed: 2"]), ignore_index=True)
@@ -91,6 +101,7 @@ for i,row in df1.iterrows():
                 # print "Day " + str(row[0]) +": "+ str(current_team)
                 userbelongsto = ""
                 group = {}
+                shifts = {}
                 for num,day in enumerate(row):
                     if not day == "Off" and not day == row[0]: 
                         # print "Num -1:"+ str(daysOfWeek[num-1]) + " Index: "+str(num)
@@ -104,14 +115,23 @@ for i,row in df1.iterrows():
                         # userbelongsto = "[" +userbelongsto + " & " + day + "]"
                         team = str(current_team).replace(" ", "")
                         teamNew = team.replace('"', '')
-                        print "Team is: " +teamNew
+                        # print "Team is: " +teamNew
                         today = str(daysOfWeek[num-1]).replace(" ", "")
                         time = str(day).replace(" ", "")
-                        userbelongsto = userbelongsto + "&Groups[]=" + teamNew +"|"+ today + "|" + time + "|"
+                        userbelongsto = userbelongsto + "" + teamNew +"|"+ today + "|" + time + ","
+                        # print "User Belongs: " +userbelongsto + "\n"
+                        
                         # group[num] = str(current_team) + " | " +str(daysOfWeek[num-1]) + "|" + str(day) +" | " +str(userbelongsto)
                 # callAPIforUser()
                 # allpeople[row[0]] = userbelongsto
-                print "User is " + row[0] + " Group is: " + str(userbelongsto)
+                
+                #shifts[i] = userbelongsto
+                if not allEmployees.get(row[0]):
+                    print "User does not exist"
+                    allEmployees[row[0]] = userbelongsto
+                
+                allEmployees[row[0]] = allEmployees[row[0]] + "," + userbelongsto
+                print "\n User is " + row[0] + " Group is: " + str(userbelongsto)
                 totalshifts[current_team] = teamShifts
                 # daysOfWeek[0] = ""
                 # teamShifts[row[0]] = daysOfWeek[0]
@@ -120,14 +140,53 @@ for i,row in df1.iterrows():
                 #For each shift block   
 # print "All Group: " + str(everygroup)
 # print "\nTeamShifts: " + str(totalshifts)
+for user in allEmployees:
+    eachUser = allEmployees[user]
+    print "\n Each user "+ user + ": " + eachUser
+    x= eachUser.strip().split(",")
+    print "\n x is " + str(x)
+    group0 = ""
+    group1 = ""
+    group2 = ""
+    group3 = ""
+    group4 = ""
+    try:
+        if not x[0] == "" or not x[0] == None:
+            group0= x[0]
+        if not x[1] == "" or not x[1] == None:
+            group1= x[1]
+        if not x[2] == "" or not x[2] == None:
+            group2= x[2]
+        if not x[3] == "" or not x[3] == None:
+            group3= x[3]
+        if not x[4] == "" or not x[4] == None:
+            group4= x[4]
+    except:
+        print "Ignore"
+    
 
+    print "Group 0 is:  "+ group0
+    phoneNumFake = "34523443"+ str(random.randint(1,9)) + str(random.randint(1,9))
+    print "Phone number : " + phoneNumFake
+    data = {'action':"OPTIN",
+        'textword':'1102413',
+        'number':phoneNumFake,
+        "firstName": row[0],
+        'group0':group0,
+        'group1':group1,
+        'group2':group2,
+        'group3':group3,
+        'group0':group4,
+    
+        }
+ 
+    # sending post request and saving response as response object
+    r = requests.post(url = API_ENDPOINT, data = data, headers=headers)
+    
+    # extracting response text 
+    pastebin_url = r.text
+    print("The pastebin URL is:%s"%pastebin_url)
 
-def myprint(d):
-  for k, v in d.iteritems():
-    if isinstance(v, dict):
-      myprint(v)
-    else:
-      print "Key: " + k + "{0} : {1}".format(k, v)
 
 def print_dict(v, prefix=''):
     if isinstance(v, dict):
@@ -141,7 +200,6 @@ def print_dict(v, prefix=''):
     else:
         print('{} = {}'.format(prefix, repr(v)))
 
-# print_dict(totalshifts)
 
 
 df1.to_excel(file_name_schedule) #Write DateFrame back as Excel file
