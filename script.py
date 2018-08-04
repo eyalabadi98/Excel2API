@@ -9,10 +9,16 @@ import requests
 import random
 from base64 import b64encode
 
+<<<<<<< Updated upstream
 API_ENDPOINT = "https://api.slicktext.com/v1/contacts/"
 
 userAndPass = b64encode(b"****").decode("ascii")
 headers = { 'Authorization' : 'Basic %s' %  userAndPass }
+=======
+conn = boto.sns.connect_to_region("us-east-1",
+            aws_access_key_id='****',
+            aws_secret_access_key='***')
+>>>>>>> Stashed changes
 
 print "\nStarting \n"
 lst = glob.glob("./schedule*")
@@ -164,6 +170,7 @@ for user in allEmployees:
     except:
         print "Ignore"
     
+<<<<<<< Updated upstream
 
     print "Group 0 is:  "+ group0
     phoneNumFake = "34523443"+ str(random.randint(1,9)) + str(random.randint(1,9))
@@ -187,6 +194,35 @@ for user in allEmployees:
     pastebin_url = r.text
     print("The pastebin URL is:%s"%pastebin_url)
 
+=======
+    for timeslot in x:
+        if not timeslot is "":
+            print "User: " + user
+            timeslot = timeslot.replace('(', "_")
+            timeslot = timeslot.replace(')', "_")
+            result = conn.create_topic(timeslot)
+            # print("Result: " + str(result))
+            timePackage.sleep(1)
+            TopicARN = result['CreateTopicResponse']['CreateTopicResult']['TopicArn']
+            EmployeeCleanNumber = employeesInformation[user]
+            if EmployeeCleanNumber is "":
+                print "Phone Number for " + user + " cannot be found!"
+                continue
+            try:
+                EmployeeCleanNumber = EmployeeCleanNumber.replace('-', "")
+                EmployeeCleanNumber = EmployeeCleanNumber.replace('(', "")
+                EmployeeCleanNumber = EmployeeCleanNumber.replace(')', "")
+                EmployeeCleanNumber = EmployeeCleanNumber.replace(' ', "")
+            except:
+                print "Number is clean"
+            
+            print "Phone number of user: "+ str(EmployeeCleanNumber)
+            resultSMS = conn.subscribe(TopicARN,"sms","****")
+            print("\n SMS: "+ str(resultSMS))
+            break
+    # print "Group 0 is:  "+ group0
+    # phoneNumFake = "34523443"+ str(random.randint(1,9)) + str(random.randint(1,9))
+>>>>>>> Stashed changes
 
 def print_dict(v, prefix=''):
     if isinstance(v, dict):
